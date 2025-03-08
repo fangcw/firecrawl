@@ -7,10 +7,10 @@ x-common-service: &common-service
   build: apps/api
 
   # 添加资源限制
-  mem_limit: 1G        # 限制内存使用为1GB
+  mem_limit: 0.5G        # 限制内存使用为1GB
   cpus: 0.5            # 限制CPU使用为0.5核
   blkio_config:        # 限制I/O速度
-    weight: 300        # 默认是500，调低以减少I/O压力
+    weight: 200        # 默认是500，调低以减少I/O压力
     device_read_bps:   # 限制读取速度
       - path: /dev/sda
         rate: 20MB
@@ -26,6 +26,22 @@ x-common-service: &common-service
     - backend
   extra_hosts:
     - "host.docker.internal:host-gateway"
+
+  # 添加更多运行时限制
+  mem_reservation: 256M        # 内存预留，低于实际限制
+  pids_limit: 50               # 限制可创建的进程数
+  oom_kill_disable: false      # 允许OOM Killer在内存不足时终止容器
+  restart: on-failure:5        # 失败时最多重启5次
+
+  # 添加 cgroup 限制
+  deploy:
+    resources:
+      limits:
+        cpus: '0.5'
+        memory: 0.5G
+      reservations:
+        cpus: '0.1'
+        memory: 256M
 
 x-common-env: &common-env
   REDIS_URL: ${REDIS_URL:-redis://redis:6379}
