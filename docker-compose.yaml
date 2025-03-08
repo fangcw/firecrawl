@@ -12,11 +12,11 @@ x-common-service: &common-service
   blkio_config:        # 限制I/O速度
     weight: 100        # 默认是500，调低以减少I/O压力
     device_read_bps:   # 限制读取速度
-      - path: /dev/sda
-        rate: 20MB
+      - path: /dev/vda
+        rate: 5MB
     device_write_bps:  # 限制写入速度
-      - path: /dev/sda
-        rate: 10MB
+      - path: /dev/vda
+        rate: 5MB
 
   ulimits:
     nofile:
