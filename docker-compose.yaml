@@ -13,7 +13,7 @@ x-common-service: &common-service
     weight: 100        # 默认是500，调低以减少I/O压力
     device_read_bps:   # 限制读取速度
       - path: /dev/vda
-        rate: 15MB
+        rate: 20MB     # 增加读取限制或根据实际需求调整
     device_write_bps:  # 限制写入速度
       - path: /dev/vda
         rate: 10MB
@@ -56,6 +56,10 @@ x-common-env: &common-env
   SEARXNG_ENDPOINT: ${SEARXNG_ENDPOINT}
   SEARXNG_ENGINES: ${SEARXNG_ENGINES}
   SEARXNG_CATEGORIES: ${SEARXNG_CATEGORIES}
+  # 添加缓存相关配置
+  CACHE_TTL: 3600
+  USE_AGGRESSIVE_CACHING: "true"
+  DISABLE_LOGGING_TO_DISK: "true"
 
 services:
   playwright-service:
@@ -112,8 +116,13 @@ services:
       weight: 100
     networks:
       - backend
-    command: redis-server --bind 0.0.0.0 --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --bind 0.0.0.0 --maxmemory 512mb --maxmemory-policy allkeys-lru --save "" --appendonly no
+    volumes:
+      - redis-data:/data
 
 networks:
   backend:
     driver: bridge
+
+volumes:
+  redis-data:
