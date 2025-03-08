@@ -6,6 +6,18 @@ x-common-service: &common-service
   # image: ghcr.io/mendableai/firecrawl
   build: apps/api
 
+  # 添加资源限制
+  mem_limit: 1G        # 限制内存使用为1GB
+  cpus: 0.5            # 限制CPU使用为0.5核
+  blkio_config:        # 限制I/O速度
+    weight: 300        # 默认是500，调低以减少I/O压力
+    device_read_bps:   # 限制读取速度
+      - path: /dev/sda
+        rate: 20MB
+    device_write_bps:  # 限制写入速度
+      - path: /dev/sda
+        rate: 10MB
+
   ulimits:
     nofile:
       soft: 65535
@@ -48,6 +60,11 @@ x-common-env: &common-env
 services:
   playwright-service:
     build: apps/playwright-service-ts
+    # 为playwright服务单独添加资源限制
+    mem_limit: 1G
+    cpus: 0.5
+    blkio_config:
+      weight: 300
     environment:
       PORT: 3000
       PROXY_SERVER: ${PROXY_SERVER}
@@ -88,10 +105,14 @@ services:
     # Using Valkey with Firecrawl is untested and not guaranteed to work. Use with caution.
     image: redis:alpine
     # image: valkey/valkey:alpine
-
+    # 为Redis添加资源限制
+    mem_limit: 512M
+    cpus: 0.3
+    blkio_config:
+      weight: 200
     networks:
       - backend
-    command: redis-server --bind 0.0.0.0
+    command: redis-server --bind 0.0.0.0 --maxmemory 256mb --maxmemory-policy allkeys-lru
 
 networks:
   backend:
